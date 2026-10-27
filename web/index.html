@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="SAR，本地 SAR 影像、轨道与 DEM 数据准备工作台。"
+    />
+    <meta name="color-scheme" content="light" />
+    <title>SAR Downloader</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./vendor/leaflet.css" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./vendor/leaflet.js"></script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <svg
+      class="icon-sprite"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="10.8" cy="10.8" r="6.8" />
+        <path d="m16 16 4.5 4.5" />
+      </symbol>
+      <symbol id="i-orbit" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="2.5" />
+        <ellipse
+          cx="12"
+          cy="12"
+          rx="10"
+          ry="4.8"
+          transform="rotate(-35 12 12)"
+        />
+        <path d="m18 3 2 2" />
+      </symbol>
+      <symbol id="i-mountain" viewBox="0 0 24 24">
+        <path d="m2 20 7-14 4 7 3-5 6 12H2Zm4-8 3 2 2-3" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="3.3" />
+        <path d="M5 21v-3a7 7 0 0 1 14 0v3" />
+      </symbol>
+      <symbol id="i-help" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .7-1.5 1.1-1.5 2.5M12 17h.01" />
+      </symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24">
+        <path d="M3 6h7l2 3h9v11H3V6Z" />
+      </symbol>
+      <symbol id="i-box" viewBox="0 0 24 24">
+        <rect
+          x="4"
+          y="4"
+          width="16"
+          height="16"
+          rx="1"
+          stroke-dasharray="3 3"
+        />
+        <path d="M2 4h4M4 2v4m14 14h4m-2-2v4" />
+      </symbol>
+      <symbol id="i-target" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="7" />
+        <circle cx="12" cy="12" r="2" />
+        <path d="M12 2v3m0 14v3M2 12h3m14 0h3" />
+      </symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24">
+        <path d="m12 3 10 5-10 5L2 8l10-5Zm-9 10 9 5 9-5M3 18l9 5 9-5" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M6 18 18 6" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M4 12h16m-6-6 6 6-6 6" />
+      </symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24">
+        <rect x="8" y="8" width="12" height="13" rx="2" />
+        <path d="M15 8V3H3v13h5" />
+      </symbol>
+      <symbol id="i-info" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 11v6m0-11v2" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5 12 4 4L20 5" />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 6v6l4 2" />
+      </symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24">
+        <path d="M12 16V3m-5 5 5-5 5 5M4 16v5h16v-5" />
+      </symbol>
+    </svg>
+    <div class="app-shell">
+      <header class="app-header">
+        <a class="brand" href="./" aria-label="SAR Downloader 首页"
+          ><span class="brand-mark"
+            ><svg viewBox="0 0 36 36" fill="none" aria-hidden="true">
+              <path
+                d="m5 24 13-15 13 15H5Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="m10 24 8-9 8 9M18 5v4M8 29h20"
+                stroke="currentColor"
+                stroke-width="1.5"
+              /></svg></span
+          ><span
+            ><strong>SAR <span class="brand-suffix">Downloader</span></strong
+            ><small>卫星影像与辅助数据下载</small></span
+          ></a
+        >
+        <div class="header-meta">
+          <span class="project-name"
+            ><svg class="icon"><use href="#i-folder" /></svg>本地工作区</span
+          >
+          <nav class="main-nav" aria-label="主要模块">
+            <div class="nav-items" role="tablist" aria-label="工作模块">
+              <button
+                class="nav-item active"
+                id="tab-sentinel"
+                data-tab="sentinel"
+                role="tab"
+                aria-selected="true"
+                aria-controls="panel-search"
+              >
+                <svg class="icon"><use href="#i-search" /></svg>Sentinel-1
+              </button>
+              <button
+                class="nav-item"
+                id="tab-nisar"
+                data-tab="nisar"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-search"
+              >
+                <svg class="icon"><use href="#i-orbit" /></svg>NISAR
+              </button>
+              <button class="nav-item" id="tab-alos" data-tab="alos" role="tab" aria-selected="false" aria-controls="panel-search">
+                <svg class="icon"><use href="#i-orbit" /></svg>ALOS / ALOS-2
+              </button>
+              <button
+                class="nav-item"
+                id="tab-auxiliary"
+                data-tab="auxiliary"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-orbit panel-dem"
+              >
+                <svg class="icon"><use href="#i-mountain" /></svg>辅助数据
+              </button>
+              <button
+                class="nav-item"
+                id="tab-downloads"
+                data-tab="downloads"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-downloads"
+              >
+                <svg class="icon"><use href="#i-download" /></svg>下载任务<span
+                  class="count-badge"
+                  id="queue-count"
+                  >0</span
+                >
+              </button>
+            </div>
+          </nav>
+        </div>
+        <div class="header-actions">
+        <button type="button" class="button button-subtle help-button" id="help-button" aria-haspopup="dialog" aria-controls="help-dialog" aria-label="帮助：打开使用说明书" title="使用说明书">
+          <svg class="icon" aria-hidden="true"><use href="#i-help" /></svg><span>帮助</span>
+        </button>
+        <button class="button button-subtle account-button" id="account-button" aria-label="个人中心" title="个人中心">
+          <svg class="icon"><use href="#i-user" /></svg><span>个人中心</span>
+        </button>
+        </div>
+      </header>
+      <div class="workspace">
+        <aside class="sidebar" aria-label="模块参数">
+          <div id="auxiliary-navigation" class="auxiliary-navigation" hidden>
+            <span class="eyebrow">辅助数据 · 单独下载</span>
+            <div class="segmented" aria-label="辅助数据类型">
+              <button
+                type="button"
+                data-auxiliary="dem"
+                class="active"
+                aria-pressed="true"
+              >
+                DEM</button
+              ><button
+                type="button"
+                data-auxiliary="orbit"
+                aria-pressed="false"
+              >
+                精密 / 恢复轨道
+              </button>
+            </div>
+          </div>
+          <form id="search-form" data-sidebar="search" novalidate>
+            <div class="sidebar-title">
+              <h1 id="search-module-title">Sentinel-1 下载</h1>
+              <button type="button" class="text-button" id="reset-filters">
+                重置
+              </button>
+            </div>
+            <div class="field-pair date-fields">
+              <div class="field">
+                <label for="start-date">开始日期 <span class="tiny-note">UTC</span></label
+                ><input id="start-date" type="date" value="2026-07-01" />
+              </div>
+              <div class="field">
+                <label for="end-date">结束日期</label
+                ><input id="end-date" type="date" value="2026-09-30" />
+              </div>
+            </div>
+            <div class="field" id="dataset-field">
+              <label for="dataset">下载类型</label
+              ><select id="dataset">
+                <option value="SENTINEL-1">Sentinel-1</option>
+                <option value="SLC-BURST">S1 Bursts</option>
+              </select>
+            </div>
+            <div id="nisar-mode-field" class="field" hidden>
+              <label for="nisar-mode">下载方式</label
+              ><select id="nisar-mode">
+                <option value="scene">NISAR 整景</option>
+                <option value="subset">按范围裁剪 · RSLC</option>
+              </select>
+            </div>
+            <div class="field-pair">
+              <div class="field">
+                <label for="product">产品类型</label
+                ><select id="product"></select>
+              </div>
+              <div class="field">
+                <label for="direction">轨道方向</label
+                ><select id="direction">
+                  <option value="">全部</option>
+                  <option value="ASCENDING">升轨 ↑</option>
+                  <option value="DESCENDING">降轨 ↓</option>
+                </select>
+              </div>
+            </div>
+            <div class="section-label">
+              <span>研究区</span><span class="tiny-note" title="各模块共用研究区">WGS84</span>
+            </div>
+            <div class="segmented" aria-label="范围输入方式">
+              <button
+                type="button"
+                class="active"
+                data-aoi-mode="coordinates"
+                aria-pressed="true"
+              >
+                经纬度</button
+              ><button type="button" data-aoi-mode="draw" aria-pressed="false">
+                画矩形</button
+              ><button
+                type="button"
+                data-aoi-mode="import"
+                aria-pressed="false"
+              >
+                导入文件
+              </button>
+            </div>
+            <div class="coordinate-fields" id="coordinate-fields">
+              <div
+                class="coordinate-range"
+                role="group"
+                aria-labelledby="longitude-label"
+              >
+                <span id="longitude-label">经度</span
+                ><input
+                  id="west"
+                  aria-label="经度起始值"
+                  type="number"
+                  step="any"
+                  placeholder="最小值"
+                  min="-180"
+                  max="180"
+                /><span class="range-to">至</span
+                ><input
+                  id="east"
+                  aria-label="经度结束值"
+                  type="number"
+                  step="any"
+                  placeholder="最大值"
+                  min="-180"
+                  max="180"
+                />
+              </div>
+              <div
+                class="coordinate-range"
+                role="group"
+                aria-labelledby="latitude-label"
+              >
+                <span id="latitude-label">纬度</span
+                ><input
+                  id="south"
+                  aria-label="纬度起始值"
+                  type="number"
+                  step="any"
+                  placeholder="最小值"
+                  min="-85"
+                  max="85"
+                /><span class="range-to">至</span
+                ><input
+                  id="north"
+                  aria-label="纬度结束值"
+                  type="number"
+                  step="any"
+                  placeholder="最大值"
+                  min="-85"
+                  max="85"
+                />
+              </div>
+            </div>
+            <div class="aoi-instructions" id="aoi-instructions" hidden></div>
+            <button type="button" class="text-button apply-aoi" id="apply-aoi">
+              应用范围到地图 <span aria-hidden="true">↗</span>
+            </button>
+            <div class="field search-limit-field">
+              <label for="result-limit">结果上限</label
+              ><select id="result-limit">
+                <option value="100">100 条</option>
+                <option value="200" selected>200 条</option>
+                <option value="500">500 条</option>
+                <option value="1000">1000 条</option>
+              </select>
+            </div>
+            <details class="advanced" id="advanced-filters">
+              <summary>更多筛选<span>轨道 / Frame / 极化</span></summary>
+              <div class="section-label">
+                <span>轨道与帧号</span><span class="tiny-note">可选</span>
+              </div>
+              <div class="field">
+                <label for="path-filter" id="path-label">Path · 相对轨道</label
+                ><input
+                  id="path-filter"
+                  type="text"
+                  inputmode="text"
+                  placeholder="例如 135 或 130-140"
+                  autocomplete="off"
+                  aria-describedby="number-filter-help"
+                />
+              </div>
+              <div class="frame-label-row">
+                <label for="frame-filter">Frame · 帧号</label
+                ><select id="frame-scheme" aria-label="Frame 编号体系"></select>
+              </div>
+              <input
+                id="frame-filter"
+                type="text"
+                inputmode="text"
+                placeholder="例如 486 或 485-488"
+                autocomplete="off"
+                aria-describedby="number-filter-help"
+              />
+              <p class="field-help" id="number-filter-help">
+                支持单值、范围、逗号列表，如 135,137-139。
+              </p>
+              <div id="burst-filters" class="field" hidden>
+                <label for="burst-id">Full Burst ID · 可选</label
+                ><input
+                  id="burst-id"
+                  placeholder="例如 114_242969_IW3"
+                  autocomplete="off"
+                /><small class="tiny-note">可输入多个编号，以逗号分隔。</small>
+              </div>
+              <div class="field">
+                <label for="polarization">极化方式</label
+                ><select id="polarization">
+                  <option value="">全部</option>
+                </select>
+              </div>
+              <p id="dataset-hint" class="field-help"></p>
+            </details>
+            <p class="form-error" id="filter-error" role="alert" hidden></p>
+            <button
+              id="search-button"
+              type="submit"
+              class="button button-primary search-button"
+            >
+              <svg class="icon"><use href="#i-search" /></svg
+              ><span id="search-button-label">检索影像</span
+              ><span class="keycap">↵</span>
+            </button>
+            <button
+              id="cancel-search"
+              type="button"
+              class="text-button full-width"
+              hidden
+            >
+              取消本次检索
+            </button>
+            <fieldset id="sentinel-options" class="download-options">
+              <legend>同时下载配套数据</legend>
+              <div class="download-options-body">
+              <label class="option-check"
+                title="优先匹配 POEORB，尚无精密轨道时使用 RESORB"
+                ><input type="checkbox" id="include-orbit" checked />轨道
+                <span>精密优先</span></label
+              >
+              <label class="option-check"
+                ><input type="checkbox" id="include-dem" />DEM
+                <span>Copernicus GLO-30</span></label
+              >
+              <details id="companion-dem-settings">
+                <summary>配套 DEM 设置</summary>
+                <div class="field">
+                  <label for="companion-dem-extent">覆盖范围</label
+                  ><select id="companion-dem-extent">
+                    <option value="selection">已选影像的完整范围</option>
+                    <option value="aoi">当前研究区</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="companion-dem-buffer">缓冲 / km</label
+                  ><input
+                    id="companion-dem-buffer"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value="5"
+                  />
+                </div>
+                <div class="field">
+                  <label for="companion-dem-format">输出格式</label
+                  ><select id="companion-dem-format">
+                    <option value="GTiff">GeoTIFF</option>
+                    <option value="ISCE">ISCE DEM + XML</option>
+                    <option value="tiles">原始瓦片</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="companion-dem-height">高程基准</label
+                  ><select id="companion-dem-height">
+                    <option value="ellipsoid">WGS84 椭球高</option>
+                    <option value="egm2008">EGM2008</option>
+                  </select>
+                </div>
+              </details>
+              </div>
+            </fieldset>
+            <fieldset id="alos-options" class="download-options" hidden>
+              <legend>同时下载配套数据</legend>
+              <div class="download-options-body"><label class="option-check" title="Copernicus GLO-30 GeoTIFF；已选影像范围外扩 5 km，保存到 dem 子目录"><input id="alos-include-dem" type="checkbox" />DEM<span>WGS84 椭球高</span></label></div>
+            </fieldset>
+            <fieldset id="nisar-options" class="download-options" hidden>
+              <legend>同时下载配套数据</legend>
+              <div class="download-options-body">
+              <label class="option-check" title="NISAR DEM v1.2 GeoTIFF；整景按所选影像范围，裁剪按确认范围，外扩 5 km，保存到 dem 子目录">
+                <input id="nisar-include-dem" type="checkbox" checked />
+                DEM<span>WGS84 椭球高</span>
+              </label>
+              </div>
+            </fieldset>
+          </form>
+          <section data-sidebar="orbit" hidden>
+            <div class="sidebar-title">
+              <h1>Sentinel-1 轨道</h1>
+            </div>
+            <button class="folder-drop" id="choose-folder">
+              <svg class="icon"><use href="#i-folder" /></svg
+              ><strong>选择影像文件夹</strong
+              ><span>扫描 ZIP / SAFE 文件名</span>
+            </button>
+            <div class="field">
+              <label for="orbit-strategy">匹配策略</label
+              ><select id="orbit-strategy">
+                <option value="auto">精密优先，缺失时用恢复轨道</option>
+                <option value="precise">仅精密轨道 POEORB</option>
+                <option value="restituted">仅恢复轨道 RESORB</option>
+              </select>
+            </div>
+            <button class="button button-primary full-width" id="queue-orbits">
+              匹配轨道
+            </button>
+            <button
+              class="button full-width orbit-queue-button"
+              id="queue-matched-orbits"
+              disabled
+            >
+              加入下载队列
+            </button>
+          </section>
+          <section data-sidebar="dem" hidden>
+            <div class="sidebar-title">
+              <h1>DEM 设置</h1>
+            </div>
+            <div class="field">
+              <label for="dem-source">数据源</label
+              ><select id="dem-source">
+                <option value="COP">Copernicus GLO-30 Public</option>
+                <option value="NISAR">NISAR DEM</option>
+                <option value="SRTM">SRTMGL1</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dem-extent">覆盖范围</label
+              ><select id="dem-extent">
+                <option value="selection">已选影像的完整范围</option>
+                <option value="aoi">当前研究区</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dem-buffer"
+                >边界缓冲 <span class="tiny-note">km</span></label
+              ><input
+                id="dem-buffer"
+                type="number"
+                value="5"
+                min="0"
+                max="100"
+                step="1"
+              />
+            </div>
+            <div class="field">
+              <label for="dem-height">高程基准</label
+              ><select id="dem-height">
+                <option value="ellipsoid">WGS84 椭球高</option>
+                <option value="egm2008">保留 EGM2008 高程</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dem-format">输出格式</label
+              ><select id="dem-format">
+                <option value="GTiff">GeoTIFF · Float32</option>
+                <option value="ISCE">ISCE DEM + XML</option>
+                <option value="tiles">仅下载原始瓦片</option>
+              </select>
+            </div>
+            <div class="info-note">
+              <svg class="icon"><use href="#i-info" /></svg>
+              <p id="dem-source-note">
+                GLO-30 为 EGM2008 DSM；转换椭球高时，首次需下载高程转换网格。
+              </p>
+            </div>
+            <button class="button button-primary full-width" id="preview-dem">
+              检查覆盖瓦片
+            </button>
+          </section>
+          <section data-sidebar="downloads" hidden>
+            <div class="sidebar-title">
+              <h1>下载设置</h1>
+            </div>
+            <div class="field">
+              <label for="concurrent">总并发数</label
+              ><select id="concurrent" title="全部任务共用；DEM 处理最多 1 个，NISAR 裁剪最多 2 景">
+                <option>1</option>
+                <option selected>2</option>
+                <option>3</option>
+                <option>4</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="output-folder">影像目录</label
+              ><input
+                id="output-folder"
+                placeholder="选择或填写影像目录"
+                autocomplete="off"
+              /><button
+                class="text-button folder-picker"
+                id="pick-download-folder"
+              >
+                选择目录 ↗
+              </button>
+            </div>
+            <p class="field-help">
+              轨道 → orbit / DEM → dem
+            </p>
+            <button class="button full-width" id="save-download-settings">
+              保存下载设置
+            </button>
+            <div class="section-label"><span>传输引擎</span></div>
+            <div class="engine-state">
+              <span class="engine-icon"
+                ><svg class="icon"><use href="#i-download" /></svg
+              ></span>
+              <div>
+                <strong>本地下载</strong><span id="engine-status">连接中…</span>
+              </div>
+              <span class="badge badge-neutral" id="engine-badge">连接中</span>
+            </div>
+            <div class="section-label"><span>缓存管理</span></div>
+            <button
+              class="button full-width"
+              id="clear-cache"
+              title="清理临时文件及未关联任务的断点；保留正式数据、未完成任务断点和高程转换网格"
+            >
+              清理闲置缓存
+            </button>
+            <p class="field-help" id="cache-status" role="status">
+              保留任务断点与成品。
+            </p>
+            <button class="button full-width" id="clear-unfinished">清理未完成数据…</button>
+            <p class="field-help">清理所选断点，保留成品。</p>
+          </section>
+        </aside>
+        <main class="main-stage" id="main-stage">
+          <section class="map-stage" id="map-stage" aria-label="地图与覆盖范围">
+            <div id="map" aria-label="研究区与影像覆盖地图"></div>
+            <div class="map-topline">
+              <span class="map-chip"
+                ><span class="status-dot"></span
+                ><span id="aoi-caption">尚未设置研究区</span></span
+              >
+              <div class="basemap-control">
+                <svg class="icon"><use href="#i-layers" /></svg
+                ><select id="basemap" aria-label="选择底图">
+                  <option value="osm">街道底图</option>
+                  <option value="satellite">卫星影像</option>
+                </select>
+              </div>
+            </div>
+            <div class="map-tools">
+              <button
+                class="map-tool"
+                id="fit-aoi"
+                aria-label="定位研究区"
+                title="定位研究区"
+              >
+                <svg class="icon"><use href="#i-target" /></svg></button
+              ><button
+                class="map-tool"
+                id="draw-aoi"
+                aria-label="绘制矩形"
+                title="绘制矩形"
+              >
+                <svg class="icon"><use href="#i-box" /></svg></button
+              ><button
+                class="map-tool"
+                id="map-import"
+                aria-label="导入研究区"
+                title="导入研究区"
+              >
+                <svg class="icon"><use href="#i-upload" /></svg>
+              </button>
+            </div>
+            <div
+              class="frame-navigator"
+              id="frame-navigator"
+              aria-label="影像覆盖组切换"
+              hidden
+            >
+              <button
+                class="icon-button"
+                id="previous-frame"
+                aria-label="上一个覆盖组"
+                title="上一个 Path / Frame"
+              >
+                ‹
+              </button>
+              <select id="map-frame" aria-label="切换 Path / Frame 覆盖组">
+                <option value="">全部覆盖组</option>
+              </select>
+              <button
+                class="icon-button"
+                id="next-frame"
+                aria-label="下一个覆盖组"
+                title="下一个 Path / Frame"
+              >
+                ›
+              </button>
+              <button
+                class="icon-button"
+                id="fit-results"
+                aria-label="显示全部影像"
+                title="缩放至全部检索影像"
+                disabled
+              >
+                <svg class="icon"><use href="#i-layers" /></svg>
+              </button>
+            </div>
+            <div class="draw-instruction" id="draw-instruction" hidden>
+              按住鼠标拖动画矩形 · Esc 取消
+            </div>
+            <div class="map-legend">
+              <span><i class="legend-aoi"></i>研究区</span
+              ><label title="显示 ASF 返回的真实影像覆盖边界"
+                ><input type="checkbox" id="show-footprints" checked /><i
+                  class="legend-scene"
+                ></i
+                >影像范围</label
+              ><span id="map-connection">底图连接中…</span>
+            </div>
+          </section>
+          <div
+            id="map-splitter"
+            class="pane-splitter"
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="调整地图与下方列表高度"
+            aria-controls="map-stage panel-search panel-dem"
+            aria-valuemin="20"
+            aria-valuemax="80"
+            aria-valuenow="47"
+            tabindex="0"
+            title="上下拖动调整高度；双击恢复默认；方向键微调"
+          >
+            <span class="splitter-grip" aria-hidden="true"></span>
+          </div>
+          <section
+            id="panel-search"
+            class="result-panel"
+            role="tabpanel"
+            aria-labelledby="tab-sentinel"
+          >
+            <div class="panel-heading">
+              <div>
+                <h2>
+                  检索结果
+                  <span class="result-number" id="result-count">0</span>
+                </h2>
+                <span class="panel-description" id="result-description"
+                  >Sentinel-1 · SLC</span
+                >
+              </div>
+              <div class="panel-tools">
+                <span id="result-source" class="badge badge-neutral"
+                  >未检索</span
+                ><button class="text-button" id="export-results">
+                  <svg class="icon"><use href="#i-download" /></svg>导出 CSV
+                </button>
+              </div>
+            </div>
+            <div id="active-frame-summary" class="active-frame-summary" hidden>
+              <span id="active-frame-caption"></span
+              ><button class="text-button" id="show-all-frames">
+                显示全部结果
+              </button>
+            </div>
+            <p
+              id="search-notice"
+              class="search-notice"
+              role="status"
+              hidden
+            ></p>
+            <div class="result-table-wrapper">
+              <table class="result-table">
+                <thead>
+                  <tr>
+                    <th class="checkbox-cell">
+                      <input
+                        id="select-all"
+                        type="checkbox"
+                        aria-label="选择全部检索结果"
+                      />
+                    </th>
+                    <th>影像 / 获取日期 <span class="tiny-note">UTC</span></th>
+                    <th>产品</th>
+                    <th id="path-column">Path</th>
+                    <th id="frame-column">
+                      Frame <span class="tiny-note">ASF</span>
+                    </th>
+                    <th id="burst-column" hidden>Full Burst ID</th>
+                    <th>极化</th>
+                    <th>方向</th>
+                    <th class="numeric">大小</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="result-body"></tbody>
+              </table>
+              <div class="empty-state" id="result-empty" hidden>
+                <svg class="icon"><use href="#i-search" /></svg>
+                <h3 id="result-empty-title">准备检索影像</h3>
+                <p id="result-empty-help">设置研究区与日期后开始检索。</p>
+                <button class="button" id="empty-reset">重置筛选</button>
+              </div>
+            </div>
+            <div class="selection-bar">
+              <div class="selection-summary">
+                <span class="selection-mark"
+                  ><svg class="icon"><use href="#i-check" /></svg></span
+                ><span
+                  >已选 <strong id="selected-count">0</strong> 景<span
+                    class="summary-divider"
+                    >/</span
+                  ><span id="selected-size">0 GB</span></span
+                ><button class="text-button" id="clear-selection" disabled>
+                  清空
+                </button>
+              </div>
+              <label id="burst-copy-options" class="burst-copy-options" hidden
+                ><input
+                  id="include-burst-xml"
+                  type="checkbox"
+                  checked
+                />同时包含 XML</label
+              >
+              <div class="selection-actions">
+                <button class="button" id="copy-links" disabled>
+                  <svg class="icon"><use href="#i-copy" /></svg>复制链接</button
+                ><button
+                  class="button button-primary"
+                  id="queue-scenes"
+                  disabled
+                >
+                  <svg class="icon"><use href="#i-download" /></svg>加入下载队列
+                </button>
+              </div>
+            </div>
+          </section>
+          <section
+            id="panel-orbit"
+            class="full-panel"
+            role="tabpanel"
+            aria-labelledby="tab-auxiliary"
+            hidden
+          >
+            <div class="full-panel-heading">
+              <h2>轨道匹配</h2>
+            </div>
+            <div class="module-summary">
+              <div>
+                <span>识别影像</span
+                ><strong id="orbit-count">0 <small>景</small></strong>
+              </div>
+              <div>
+                <span>数据源</span
+                ><strong class="summary-text">ASF 公共镜像</strong>
+              </div>
+              <div>
+                <span>匹配状态</span
+                ><strong class="summary-text" id="orbit-match-status"
+                  >尚未匹配</strong
+                >
+              </div>
+            </div>
+            <div class="table-card">
+              <div class="panel-heading">
+                <h3>本地影像清单</h3>
+                <span class="panel-description" id="orbit-folder-label"
+                  >未选择文件夹</span
+                >
+              </div>
+              <div class="table-scroll">
+                <table class="result-table">
+                  <thead>
+                    <tr>
+                      <th>卫星</th>
+                      <th>影像标识</th>
+                      <th>获取区间 · UTC</th>
+                      <th>轨道文件</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orbit-body"></tbody>
+                </table>
+              </div>
+              <div class="empty-state" id="orbit-empty">
+                <svg class="icon"><use href="#i-folder" /></svg>
+                <h3>从影像文件夹开始</h3>
+                <button class="button" id="orbit-empty-open">
+                  选择影像文件夹
+                </button>
+              </div>
+            </div>
+          </section>
+          <section
+            id="panel-dem"
+            class="result-panel"
+            role="tabpanel"
+            aria-labelledby="tab-auxiliary"
+            hidden
+          >
+            <div class="panel-heading">
+              <div>
+                <h2>
+                  DEM 数据 <span class="result-number" id="dem-count">0</span>
+                </h2>
+                <span class="panel-description" id="dem-description"
+                  ></span
+                >
+              </div>
+              <button class="button button-primary" id="queue-dem" disabled>
+                创建 DEM 任务
+              </button>
+            </div>
+            <div class="dem-body">
+              <div class="empty-state" id="dem-empty">
+                <svg class="icon"><use href="#i-mountain" /></svg>
+                <h3>暂无 DEM 瓦片</h3>
+                <p>设置参数后检查覆盖瓦片。</p>
+              </div>
+              <div class="tile-grid" id="dem-tiles"></div>
+            </div>
+            <div class="panel-note" id="dem-note-panel" hidden>
+              <svg class="icon"><use href="#i-info" /></svg
+              ><span id="dem-note"></span
+              >
+            </div>
+          </section>
+          <section
+            id="panel-downloads"
+            class="full-panel download-panel"
+            role="tabpanel"
+            aria-labelledby="tab-downloads"
+            hidden
+          >
+            <div class="full-panel-heading">
+              <h2>下载任务</h2>
+            </div>
+            <div class="task-kind-filter">
+              <label for="task-kind">任务类型</label
+              ><select id="task-kind">
+                <option value="all">全部类型</option>
+                <option value="sar">整景 / Bursts</option>
+                <option value="nisar-subset">NISAR 裁剪</option>
+                <option value="orbit">轨道</option>
+                <option value="dem">DEM</option>
+              </select>
+            </div>
+            <div class="queue-toolbar">
+              <div class="segmented queue-filters" aria-label="任务状态">
+                <button
+                  class="active"
+                  data-task-filter="all"
+                  aria-pressed="true"
+                >
+                  全部 <span id="task-total">0</span></button
+                ><button data-task-filter="queued" aria-pressed="false">
+                  待启动</button
+                ><button data-task-filter="active" aria-pressed="false">
+                  进行中</button
+                ><button data-task-filter="paused" aria-pressed="false">
+                  已暂停</button
+                ><button data-task-filter="completed" aria-pressed="false">
+                  已完成</button
+                ><button data-task-filter="error" aria-pressed="false">
+                  需处理
+                </button>
+              </div>
+              <div class="panel-tools">
+                <button class="button" id="preflight-button">下载前检查</button
+                ><button class="button" id="pause-tasks">暂停全部</button
+                ><button class="button" id="resume-tasks">恢复全部</button
+                ><button class="button button-primary" id="start-tasks">
+                  开始下载</button
+                ><button
+                  class="button"
+                  id="remove-completed-tasks"
+                  title="移除已完成记录，保留下载文件"
+                >
+                  移除已完成</button
+                ><button
+                  class="button"
+                  id="remove-all-tasks"
+                  title="移除全部任务记录，保留数据文件和断点"
+                >
+                  移除全部
+                </button>
+              </div>
+            </div>
+            <div class="engine-banner" id="download-banner" role="status">
+              <span class="status-dot"></span
+              ><span id="download-banner-text">正在连接本地下载服务…</span
+              ><button class="text-button" id="download-login">
+                登录 Earthdata ↗
+              </button>
+            </div>
+            <section
+              id="preflight-report"
+              class="preflight-report"
+              aria-label="下载前检查结果"
+              hidden
+            >
+              <h3>下载前检查</h3>
+              <p id="preflight-summary"></p>
+              <ul id="preflight-checks"></ul>
+              <p id="preflight-disks"></p>
+            </section>
+            <div id="task-list" class="task-list"></div>
+            <div class="empty-state queue-empty" id="queue-empty">
+              <span class="large-icon"
+                ><svg class="icon"><use href="#i-download" /></svg
+              ></span>
+              <h3>队列还是空的</h3>
+              <p>在影像检索中选择数据，加入你的第一个任务。</p>
+              <button class="button" id="back-to-search">
+                去检索影像 <svg class="icon"><use href="#i-arrow" /></svg>
+              </button>
+            </div>
+          </section>
+        </main>
+      </div>
+      <footer class="app-status">
+        <span
+          ><span class="status-dot"></span
+          ><span id="status-message" role="status" aria-live="polite"
+            >界面就绪</span
+          ></span
+        ><span class="status-right"
+          ><span id="app-version">SAR Downloader v1.0</span><button type="button" class="text-button" id="open-updates" aria-haspopup="dialog" aria-controls="updates-dialog">检查更新</button></span
+        >
+      </footer>
+    </div>
+    <dialog class="subset-dialog updates-dialog" id="updates-dialog" aria-labelledby="updates-title">
+      <div class="subset-header">
+        <div><h2 id="updates-title">软件更新</h2><p id="update-current" class="field-help">当前版本</p></div>
+        <button type="button" class="icon-button" data-close-dialog="updates-dialog" aria-label="关闭更新窗口" autofocus>×</button>
+      </div>
+      <form id="update-form" class="updates-body">
+        <details id="update-source-settings">
+          <summary>更新来源</summary>
+          <div class="field"><label for="update-repository">GitHub 发布仓库</label><input id="update-repository" type="text" maxlength="256" placeholder="https://github.com/用户名/仓库名" autocomplete="off" spellcheck="false" /></div>
+          <p class="field-help">填写发布者提供的公开仓库地址，检查时自动保存。</p>
+        </details>
+        <p id="update-status" role="status" aria-live="polite">点击检查最新正式版。</p>
+        <div class="updates-actions">
+          <button type="submit" class="button" id="update-check">检查更新</button>
+          <a class="button button-primary" id="update-download" target="_blank" rel="noopener noreferrer" hidden>下载新版</a>
+          <a class="button" id="update-source-download" target="_blank" rel="noopener noreferrer" hidden>下载源码</a>
+          <a class="text-button" id="update-release-link" target="_blank" rel="noopener noreferrer" hidden>查看发布页 ↗</a>
+        </div>
+        <p id="update-package" class="field-help"></p>
+        <section id="update-details" hidden><h3>更新说明</h3><pre id="update-notes"></pre></section>
+        <p class="field-help updates-guidance">下载完成后，请暂停任务并退出旧程序，完整解压新版再启动。账号、队列和设置保存在独立用户目录中。</p>
+      </form>
+    </dialog>
+    <dialog class="help-dialog" id="help-dialog" aria-labelledby="help-title">
+      <div class="help-header">
+        <h2 id="help-title">SAR Downloader使用说明书</h2>
+        <div class="help-actions">
+          <a class="button" href="./help/manual.pdf" target="_blank" rel="noopener">新窗口打开</a>
+          <a class="button" id="help-download" href="./help/download" download="SAR Downloader使用说明书.pdf">下载 PDF</a>
+          <button type="button" class="icon-button" data-close-dialog="help-dialog" aria-label="关闭使用说明书" autofocus><svg class="icon" aria-hidden="true"><use href="#i-close" /></svg></button>
+        </div>
+      </div>
+      <p class="help-note">说明书已随软件附带，可离线查看。若下方未显示，请选择“新窗口打开”或“下载 PDF”。</p>
+      <iframe id="help-frame" title="SAR Downloader使用说明书 PDF" data-src="./help/viewer.html"></iframe>
+    </dialog>
+    <dialog class="drawer" id="account-dialog" aria-labelledby="account-title">
+      <div class="drawer-header">
+        <div>
+          <span class="eyebrow">PREFERENCES</span>
+          <h2 id="account-title">个人中心</h2>
+        </div>
+        <button
+          class="icon-button"
+          data-close-dialog="account-dialog"
+          aria-label="关闭个人中心"
+        >
+          <svg class="icon"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="drawer-content">
+        <section class="settings-section">
+          <h3>数据平台</h3>
+          <div class="service-row">
+            <span class="service-avatar">E</span>
+            <div>
+              <strong>NASA Earthdata</strong><span>SAR 影像下载认证</span>
+            </div>
+            <span class="badge badge-neutral" id="earthdata-badge">未登录</span>
+          </div>
+          <form id="earthdata-form" autocomplete="off">
+            <div id="earthdata-fields">
+              <div class="field">
+                <label for="earthdata-username">Earthdata 用户名</label
+                ><input
+                  id="earthdata-username"
+                  name="earthdata-username"
+                  autocomplete="off"
+                  spellcheck="false"
+                  autocapitalize="none"
+                  maxlength="128"
+                  required
+                />
+              </div>
+              <div class="field">
+                <label for="earthdata-password">密码</label
+                ><input
+                  id="earthdata-password"
+                  name="earthdata-password"
+                  type="password"
+                  autocomplete="off"
+                  maxlength="1024"
+                  required
+                />
+              </div>
+            </div>
+            <p id="earthdata-status" class="auth-status" role="status" hidden></p>
+            <p class="field-help">
+              会话加密保存，退出登录时清除；不保存密码。
+            </p>
+            <div class="settings-actions">
+              <a
+                class="text-link"
+                href="https://urs.earthdata.nasa.gov/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >注册 / ASF 授权 ↗</a
+              ><button
+                type="submit"
+                class="button button-primary"
+                id="earthdata-login"
+              >
+                登录</button
+              ><button
+                type="button"
+                class="button"
+                id="earthdata-logout"
+                hidden
+              >
+                退出登录
+              </button>
+            </div>
+          </form>
+        </section>
+        <section class="settings-section">
+          <h3>底图服务</h3>
+          <p class="section-description">
+            卫星影像需配置 API Key。
+          </p>
+          <div class="field">
+            <label for="satellite-provider">卫星影像提供方</label
+            ><select id="satellite-provider">
+              <option value="tianditu">天地图 · 影像 + 中文注记</option>
+              <option value="esri">Esri World Imagery</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="basemap-key">API Key / Token</label
+            ><input
+              id="basemap-key"
+              type="password"
+              placeholder="填写所选服务的 Key"
+              autocomplete="off"
+            />
+          </div>
+          <p class="field-help">
+            Key 加密保存，下次打开自动恢复。
+          </p>
+          <div class="settings-actions">
+            <a
+              class="text-link"
+              id="provider-docs"
+              href="https://lbs.tianditu.gov.cn/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >申请与服务说明 ↗</a
+            ><button class="button button-primary" id="apply-basemap">
+              应用卫星底图
+            </button>
+          </div>
+        </section>
+        <section class="settings-section">
+          <h3>本机存储</h3>
+          <p class="section-description">
+            导出不含登录凭据和底图 Key。
+          </p>
+          <button class="button" id="export-project">导出任务配置</button>
+        </section>
+      </div>
+    </dialog>
+    <dialog
+      class="drawer scene-drawer"
+      id="scene-dialog"
+      aria-labelledby="scene-title"
+    >
+      <div class="drawer-header">
+        <div>
+          <span class="eyebrow">SCENE DETAILS</span>
+          <h2 id="scene-title">影像详情</h2>
+        </div>
+        <button
+          class="icon-button"
+          data-close-dialog="scene-dialog"
+          aria-label="关闭影像详情"
+        >
+          <svg class="icon"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div id="scene-content" class="drawer-content"></div>
+    </dialog>
+    <dialog id="subset-dialog" class="subset-dialog" aria-labelledby="subset-title">
+      <form id="subset-form">
+        <div class="subset-header">
+          <div><span class="eyebrow">DEFINE YOUR SUBSET</span><h2 id="subset-title">设置下载范围</h2><p id="subset-summary" class="field-help"></p></div>
+          <button type="button" id="subset-close" class="icon-button" data-close-dialog="subset-dialog" aria-label="关闭范围设置"><svg class="icon"><use href="#i-close" /></svg></button>
+        </div>
+        <fieldset id="subset-fields" class="subset-fields">
+          <div class="subset-settings">
+            <div class="subset-bounds">
+              <div class="subset-range-title"><strong>经纬度范围</strong><span class="field-help">WGS84 · 保留两位小数</span></div>
+              <div class="subset-range-row"><span>经度</span><input id="crop-west" aria-label="下载范围西经度" type="number" min="-180" max="180" step="0.01" required /><span>至</span><input id="crop-east" aria-label="下载范围东经度" type="number" min="-180" max="180" step="0.01" required /></div>
+              <div class="subset-range-row"><span>纬度</span><input id="crop-south" aria-label="下载范围南纬度" type="number" min="-85" max="85" step="0.01" required /><span>至</span><input id="crop-north" aria-label="下载范围北纬度" type="number" min="-85" max="85" step="0.01" required /></div>
+              <p class="field-help">范围按 0.01° 向外取整；RSLC 保存到所选目录的 rslc 文件夹，summary.txt 记录本次范围和影像信息。</p>
+            </div>
+              <div class="field-pair">
+                <div class="field">
+                  <label for="subset-frequency">频率</label
+                  ><select id="subset-frequency">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="AB">A + B</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="subset-polarization">极化</label
+                  ><select id="subset-polarization">
+                    <option>HH</option>
+                    <option>HV</option>
+                    <option>VV</option>
+                    <option>VH</option>
+                    <option value="HH,HV">HH + HV</option>
+                    <option value="VV,VH">VV + VH</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="subset-connections">每景并发连接</label
+                ><select id="subset-connections">
+                  <option>2</option>
+                  <option>4</option>
+                  <option selected>6</option>
+                  <option>8</option>
+                  <option>12</option>
+                  <option>16</option>
+                </select>
+              </div>
+              <details>
+                <summary>高程范围（可选）</summary>
+                <div class="field-pair">
+                  <div class="field">
+                    <label for="subset-min-height">最低 / m</label
+                    ><input
+                      id="subset-min-height"
+                      type="number"
+                      min="-1000"
+                      max="10000"
+                      placeholder="全部高度层"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="subset-max-height">最高 / m</label
+                    ><input
+                      id="subset-max-height"
+                      type="number"
+                      min="-1000"
+                      max="10000"
+                      placeholder="全部高度层"
+                    />
+                  </div>
+                </div>
+              </details>
+
+            <div class="field"><label for="subset-directory">影像保存目录</label><div class="subset-directory-row"><input id="subset-directory" required placeholder="选择或输入影像保存目录" /><button type="button" id="subset-pick-directory" class="button">选择…</button></div></div>
+            <div class="subset-dem"><label class="option-check" title="NISAR DEM v1.2 GeoTIFF；下载范围外扩 5 km，保存到 dem 子目录"><input id="subset-include-dem" type="checkbox" checked />同时下载 DEM<span>WGS84 椭球高</span></label></div>
+          </div>
+          <div class="subset-preview">
+            <div id="subset-map" aria-label="下载范围地图"></div>
+            <div class="subset-map-actions"><button type="button" id="subset-fit" class="button">定位所选范围</button><button type="button" id="subset-reset-area" class="button">恢复研究区</button><select id="subset-basemap" aria-label="裁剪范围底图"><option value="osm">街道底图</option><option value="satellite">卫星影像</option></select></div>
+            <div class="subset-legend"><span>— 影像范围</span><span>— 下载范围</span><small id="subset-map-status" role="status"></small></div>
+          </div>
+        </fieldset>
+        <p id="subset-error" class="subset-error" role="alert" hidden></p>
+        <div class="subset-footer"><button type="submit" id="subset-start" class="button button-primary">开始下载</button></div>
+      </form>
+    </dialog>
+    <dialog id="cleanup-dialog" class="subset-dialog cleanup-dialog" aria-labelledby="cleanup-title">
+      <form id="cleanup-form">
+        <div class="subset-header"><div><h2 id="cleanup-title">清理未完成数据</h2><p class="field-help">仅清理所选任务的断点和中间文件，正式影像、轨道及 DEM 成品保留。</p></div><button type="button" class="icon-button" id="cleanup-close" data-close-dialog="cleanup-dialog" aria-label="关闭清理窗口">×</button></div>
+        <fieldset id="cleanup-fields" class="cleanup-fields">
+          <div class="cleanup-toolbar"><span>选择需要重新下载的任务</span><button type="button" id="cleanup-refresh" class="text-button">刷新预览</button></div>
+          <div id="cleanup-list"></div>
+          <p id="cleanup-shared" class="field-help"></p>
+          <label class="cleanup-option"><input type="checkbox" id="cleanup-remove" />同时移除所选任务记录</label>
+          <label class="cleanup-option cleanup-confirm"><input type="checkbox" id="cleanup-confirm" />我确认清理所选任务的未完成文件，已下载的部分将无法续传。</label>
+        </fieldset>
+        <p id="cleanup-error" class="subset-error" role="alert" hidden></p>
+        <div class="subset-footer"><span id="cleanup-summary" role="status" class="field-help"></span><div class="cleanup-actions"><button type="button" id="cleanup-cancel" class="button" data-close-dialog="cleanup-dialog">取消</button><button type="submit" id="cleanup-submit" class="button button-primary" disabled>清理所选任务</button></div></div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <noscript>请启用 JavaScript 以使用地图和交互界面。</noscript>
+  </body>
+</html>

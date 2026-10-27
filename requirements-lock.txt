@@ -1,0 +1,14 @@
+# Tested Windows x64 runtime, Python 3.11 / 3.12. No build tools.
+certifi==2026.10.18
+charset-normalizer==3.5.2
+idna==3.20
+numpy==2.4.6
+pyproj==3.6.1
+pyshp==3.0.2.post1
+requests==2.32.5
+shapely==2.1.1
+urllib3==2.8.0
+h5py==3.16.0
+cryptography==46.0.3; sys_platform != 'win32'
+cffi==2.0.0; sys_platform != 'win32'
+pycparser==2.23; sys_platform != 'win32'

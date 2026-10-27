@@ -1,0 +1,11 @@
+{
+  "name": "sar-downloader",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sentinel-1, NISAR and auxiliary data downloader",
+  "scripts": {
+    "test": "node --test tests/core.test.mjs tests/scene-view.test.mjs tests/workspace.test.mjs tests/api.test.mjs tests/search-controller.test.mjs tests/queue-view.test.mjs tests/subset-dialog.test.mjs tests/basemap.test.mjs tests/cleanup-ui.test.mjs tests/dem-settings.test.mjs tests/updates-ui.test.mjs",
+    "check": "node --check web/app.js && node --check web/core.js && node --check web/map.js && node --check web/split-pane.js && node --check web/downloads-ui.js && node --check web/scene-view.js && node --check web/workspace-state.js && node --check web/queue-view.js && node --check web/api.js && node --check web/preferences.js && node --check web/search-controller.js && node --check web/auxiliary-controller.js && node --check web/preflight-ui.js && node --check web/subset-dialog.js && node --check web/basemap.js && node --check web/cleanup-ui.js && node --check web/updates-ui.js"
+  }
+}

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SAR Downloader使用说明书</title>
+  <link rel="stylesheet" href="./viewer.css">
+  <script type="module" src="./viewer.js"></script>
+</head>
+<body>
+  <nav class="toolbar" aria-label="说明书翻页与缩放">
+    <button id="previous" type="button" aria-label="上一页" disabled>上一页</button>
+    <label>第 <input id="page-number" type="number" min="1" value="1" aria-label="跳转到页码" disabled> 页 <span id="page-count">/ —</span></label>
+    <button id="next" type="button" aria-label="下一页" disabled>下一页</button>
+    <label class="zoom-label">缩放 <select id="zoom" aria-label="页面缩放" disabled><option value="fit">适合宽度</option><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select></label>
+  </nav>
+  <p id="status" role="status">正在打开说明书…</p>
+  <main id="pages" aria-label="说明书页面">
+    <div id="page-sheet"><canvas id="page-canvas" role="img" aria-label="说明书页面"></canvas><div id="links"></div></div>
+  </main>
+</body>
+</html>

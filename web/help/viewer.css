@@ -1,0 +1,19 @@
+:root { color-scheme: light; font: 13px/1.5 "Segoe UI", "Microsoft YaHei", sans-serif; color: #263b53; background: #e9edf2; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+.toolbar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; padding: 10px 12px; background: #f8fafc; border-bottom: 1px solid #dfe7f1; }
+button,input,select { font: inherit; color: inherit; background: white; border: 1px solid #d3dce7; border-radius: 5px; padding: 5px 8px; min-height: 32px; }
+button { cursor: pointer; }
+button:hover:enabled { background: #edf4fc; border-color: #9bb4cf; }
+button:disabled { opacity: .4; cursor: default; }
+button:focus-visible,input:focus-visible,select:focus-visible { outline: 2px solid #5b8ac4; outline-offset: 2px; }
+input { width: 56px; text-align: center; }
+label { white-space: nowrap; }
+#status { text-align: center; margin: 12px; color: #64788f; }
+#pages { padding: 16px; overflow: auto; }
+#page-sheet { position: relative; margin: 0 auto; width: fit-content; box-shadow: 0 2px 14px #263b5320; background: white; }
+canvas { display: block; }
+#links { position: absolute; inset: 0; pointer-events: none; }
+.page-link { position: absolute; padding: 0; border: 0; border-radius: 0; min-height: 0; background: transparent; cursor: pointer; pointer-events: auto; }
+.page-link:hover,.page-link:focus-visible { background: #2563a61a; outline: 1px solid #5b8ac4; outline-offset: 0; }
+@media (max-width: 480px) { #pages { padding: 8px; } .toolbar { gap: 6px; font-size: 12px; } .zoom-label { width: 100%; text-align: center; } }
